@@ -1,6 +1,40 @@
-node_modules
-.env
-.DS_Store
-npm-debug.log 
+# Ignore Python / Node / build artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+node_modules/
+dist/
+build/
 
-.vscode
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Env files (secrets)
+.env
+.env.local
+.env.*.local
+
+# Docker specific
+# Don’t ignore Dockerfile, docker-compose.yml, or .dockerignore
+# Only ignore generated artifacts
+*.pid
+*.seed
+*.tar
+
+# Docker volumes (if stored locally)
+db_data/
+redis_data/
+
+# VSCode / IDE
+.vscode/
+.idea/
+*.swp
+    
