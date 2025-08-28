@@ -3,8 +3,9 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const validator = require('validator');
+const crypto = require("crypto");
 
-const UserSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
     firstName:{
         type:String,
         trim:true,
@@ -39,6 +40,8 @@ const UserSchema = new mongoose.Schema({
         }
       },
     },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
     age:{
         type:Number,
         min:18,
@@ -70,12 +73,13 @@ const UserSchema = new mongoose.Schema({
      type:String,
      default:"Hey ! I am New User in DevTinder",
     },
+
 },
  {timestamps: true}
 );
 
 // Middleware for set Photo with Name Character
-UserSchema.pre("save", function (next) {
+userSchema.pre("save", function (next) {
   if (!this.photoUrl) {
     const name = this.lastName
       ? `${this.firstName}+${this.lastName}`
@@ -86,7 +90,7 @@ UserSchema.pre("save", function (next) {
   next();
 });
 
-UserSchema.methods.getJWT = async function () {
+userSchema.methods.getJWT = async function () {
   const user = this;
 
   const token = jwt.sign({_id:user._id}, process.env.JWT_SECRET, {
@@ -98,7 +102,7 @@ UserSchema.methods.getJWT = async function () {
 
 // UserSchema.index({email:1}); // not Required because it's uniqure:true  
 
-UserSchema.methods.validatePassword = async function (passwordInputByUser) {
+userSchema.methods.validatePassword = async function (passwordInputByUser) {
   const user = this;
   const passwordHash = user.password;
 
@@ -110,5 +114,17 @@ UserSchema.methods.validatePassword = async function (passwordInputByUser) {
   return isPasswordValid;
 };
 
-const User = mongoose.model("User", UserSchema);
+
+// Generate reset token
+userSchema.methods.getResetPasswordToken = function () {
+  const resetToken = crypto.randomBytes(20).toString("hex");
+  this.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  this.resetPasswordExpire = Date.now() + 30 * 60 * 1000; // 30 min
+  return resetToken;
+};
+
+const User = mongoose.model("User", userSchema);
 module.exports = User;

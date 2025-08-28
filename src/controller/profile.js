@@ -1,32 +1,29 @@
-const validator = require('validator');
-const {hash} = require('bcrypt');
-const {validUpdateProfile} = require('../utils/Validate');
+const { validUpdateProfile } = require("../utils/Validate");
 
-exports.getProfile = async(req,res)=>{
-  try{
+exports.getProfile = async (req, res) => {
+  try {
     const user = req.user;
     if (!user || user.length === 0) {
       throw new Error("No users found");
     }
 
     res.status(200).json({
-      message:"Get Profile Successfully !!",
-      data:user,
-    })
+      message: "Get Profile Successfully !!",
+      data: user,
+    });
   } catch (error) {
-    console.log(error)
-     res.status(500).json({
-      message:"Error in get profile",
+    console.log(error);
+    res.status(500).json({
+      message: "Error in get profile",
       error,
-     })
+    });
   }
-}
+};
 
-
-exports.editProfile = async(req, res) => {
+exports.editProfile = async (req, res) => {
   try {
     const loggedInUser = req.user;
-    if(!validUpdateProfile(req)){
+    if (!validUpdateProfile(req)) {
       throw new Error("Error in Update Profile");
     }
 
@@ -34,7 +31,7 @@ exports.editProfile = async(req, res) => {
     await loggedInUser.save();
 
     return res.status(200).json({
-      message:`${loggedInUser.firstName} your profile updated successfully`,
+      message: `${loggedInUser.firstName} your profile updated successfully`,
       user: loggedInUser,
     });
   } catch (error) {
@@ -46,28 +43,3 @@ exports.editProfile = async(req, res) => {
   }
 };
 
-exports.forgotPasswordProfile = async(req,res)=>{
-  try{
-    const {password} = req.body;
-    if(!validator.isStrongPassword(password)){
-      throw new Error("Please Enter a Strong Password");
-    }
-    
-    const user = req.user;
-    console.log(user);
-
-    user.password = await hash(password,10);
-
-    await user.save();
-    user.password = undefined;
-    res.status(200).json({
-      message:"Password Update Successfully !!",
-    })
-  } catch (error) {
-    console.log(error)
-     res.status(500).json({
-      message:"Error in Update password",
-      error,
-     })
-  }
-}

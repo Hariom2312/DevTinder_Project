@@ -1,7 +1,9 @@
 const User = require("../model/User");
-const {hash} = require('bcrypt');
+const { hash } = require("bcrypt");
 const { validSignup } = require("../utils/Validate");
 require("dotenv").config();
+const crypto = require("crypto");
+const sendEmail = require("../utils/sendEmail");
 
 exports.signup = async (req, res) => {
   try {
@@ -37,34 +39,37 @@ exports.signup = async (req, res) => {
     console.error(err);
     return res.status(500).json({
       sucess: false,
-      message: "Signup Failed",
-      data: err,
+      message: "Signup Failed " + err.message,
     });
   }
 };
 
 exports.login = async (req, res) => {
-try {
+  try {
     const { email, password } = req.body;
-
     const user = await User.findOne({ email });
     if (!user) {
       throw new Error("Invalid credentials");
     }
-    
+
     const isPasswordValid = await user.validatePassword(password);
-   
+
     if (isPasswordValid) {
       const token = await user.getJWT();
+
+      user.password = undefined;
       
       res.cookie("loginToken", token, {
         expires: new Date(Date.now() + 8 * 3600000),
-        httpOnly:true,
-        secure:true,
+        httpOnly: true,
+        secure: true,
       });
-      user.password = undefined;
 
-      res.send(user);
+      res.status(200).json({
+        message: "User logged in successfully",
+        token,
+        user,
+      });
     } else {
       throw new Error("Invalid credentials");
     }
@@ -81,5 +86,74 @@ exports.logout = (req, res) => {
       .json({ message: "Logout Successfully!" });
   } catch (error) {
     res.status(500).json({ message: "Error in logout" + error });
+  }
+};
+
+exports.forgotPasswordProfile = async (req, res) => {
+  // POST /forgot_password  → send reset mail
+  // PUT  /new_password/:token → reset password
+  try {
+    // ✅ Case 1: Send reset email (when only email is sent)
+    if (req.method === "POST") {
+      const { email } = req.body;
+      const user = await User.findOne({ email });
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      const resetToken = user.getResetPasswordToken();
+      await user.save({ validateBeforeSave: false });
+
+      const resetUrl = `${process.env.FRONTEND_URL}/new_password/${resetToken}`;
+      const message = `You requested a password reset. Click below:\n\n${resetUrl}`;
+
+      await sendEmail({
+        email: user.email,
+        subject: "Password Reset",
+        message,
+      });
+
+      return res.json({ success: true, message: "Reset email sent" });
+    }
+
+    // ✅ Case 2: Reset password (when token is in URL)
+    if (req.method === "PUT") {
+      const resetPasswordToken = crypto
+        .createHash("sha256")
+        .update(req.params.token)
+        .digest("hex");
+
+      console.log("Token from URL:", req.params.token);
+      console.log("Hashed token:", resetPasswordToken);
+
+      const user = await User.findOne({
+        resetPasswordToken,
+        resetPasswordExpire: { $gt: Date.now() },
+      });
+
+      console.log(user);
+
+      if (!user)
+        return res.status(400).json({ message: "Invalid or expired token" });
+
+      let hashedPassword;
+      try {
+        hashedPassword = await hash(req.body.password, 10);
+      } catch (err) {
+        throw new Error("Error in hashing Password");
+      }
+
+      user.password = hashedPassword;
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+
+      await user.save();
+
+      return res.json({
+        success: true,
+        message: "Password updated successfully",
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error " + err.message });
   }
 };
