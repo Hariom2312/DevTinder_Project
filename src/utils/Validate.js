@@ -11,18 +11,18 @@ const validUpdateProfile = (req)=>{
     const allowedEditFields = [
     "firstName",
     "lastName",
-    "emailId",
+    "password",
     "photoUrl",
     "gender",
     "age",
     "about",
     "skills",
   ];
-
-  const isEditAllowed = Object.keys(req.body).every((field) =>
-    allowedEditFields.includes(field)
+  console.log("Req.Body:",req.body);
+  const isEditAllowed = Object.keys(req.body.data).every((field) =>
+     allowedEditFields.includes(field)
   );
-//  console.log(isEditAllowed)
+//  console.log(isEditAllowed);
   return isEditAllowed;
 }
 

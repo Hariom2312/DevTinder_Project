@@ -68,13 +68,16 @@ exports.login = async (req, res) => {
       res.status(200).json({
         message: "User logged in successfully",
         token,
-        user,
+        data: user,
       });
     } else {
-      throw new Error("Invalid credentials");
+      throw new Error("Error in login");
     }
   } catch (err) {
-    res.status(400).send("ERROR : " + err.message);
+    res.status(500).json({
+      message:err.message,
+      err,
+    });
   }
 };
 
@@ -85,7 +88,7 @@ exports.logout = (req, res) => {
       .status(200)
       .json({ message: "Logout Successfully!" });
   } catch (error) {
-    res.status(500).json({ message: "Error in logout" + error });
+    res.status(500).json({ message: "Error in logout" + error.message });
   }
 };
 
@@ -111,7 +114,7 @@ exports.forgotPasswordProfile = async (req, res) => {
         message,
       });
 
-      return res.json({ success: true, message: "Reset email sent" });
+      return res.json({ success: true, message: "Reset email sent ✅" });
     }
 
     // ✅ Case 2: Reset password (when token is in URL)
@@ -149,7 +152,7 @@ exports.forgotPasswordProfile = async (req, res) => {
 
       return res.json({
         success: true,
-        message: "Password updated successfully",
+        message: "Password updated successfully 🚀",
       });
     }
   } catch (err) {

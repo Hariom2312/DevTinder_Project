@@ -11,8 +11,9 @@ app.use(
   })
 );
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "10mb" }));       // for JSON payloads
+app.use(express.urlencoded({ limit: "10mb", extended: true })); // for form data
+
 
 const authRouter = require("./router/authRouter.js");
 const profileRouter  = require("./router/profileRouter.js");
