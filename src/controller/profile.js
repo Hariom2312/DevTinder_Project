@@ -1,5 +1,6 @@
 const { validUpdateProfile } = require("../utils/Validate");
-const { hash } = require('bcrypt');
+const { hash } = require("bcrypt");
+const User = require("../model/User");
 
 exports.getProfile = async (req, res) => {
   try {
@@ -22,30 +23,60 @@ exports.getProfile = async (req, res) => {
 
 exports.editProfile = async (req, res) => {
   try {
-    const loggedInUser = req.user;
+    const loggedInUser = req.user._id;
+    console.log("Body:", req.body);
+
     if (!validUpdateProfile(req)) {
-      return res.status(400).json({ message: "Error in Update Profile" });
+      return res.status(400).json({ message: "Error in Update Profile..." });
     }
 
-    Object.keys(req.body).every((key) => (loggedInUser[key] = req.body[key]));
+    const {
+      firstName,
+      lastName,
+      password,
+      photoUrl,
+      skills,
+      about,
+      age,
+      gender,
+    } = req.body;
 
-    let hashedPassword;
-    try {
-      hashedPassword = await hash(req.body.data.password, 10); // 10 number of rounds
-    } catch (err) {
-      throw new Error("Error in hashing Password");
+    const updateData = {};
+
+    // ✅ Only set if provided
+    if (firstName && firstName.trim() !== "") updateData.firstName = firstName;
+    if (lastName) updateData.lastName = lastName;
+    if (age) updateData.age = age;
+    if (gender) updateData.gender = gender;
+    if (photoUrl) updateData.photoUrl = photoUrl;
+    if (skills) updateData.skills = skills;
+    if (about) updateData.about = about;
+
+    // ✅ Only hash and update password if provided
+    if (password && password.trim() !== "") {
+      try {
+        const hashedPassword = await hash(password, 10);
+        updateData.password = hashedPassword;
+      } catch (err) {
+        throw new Error("Error in hashing Password");
+      }
     }
-    loggedInUser.password = hashedPassword;
-    // console.log("LoggedInUser", loggedInUser);
-    const data = await loggedInUser.save();
-    
-    console.log("data",data);
+
+    const updatedUser = await User.findByIdAndUpdate(
+      loggedInUser,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    // ✅ Don’t leak password hash back to client
+    if (updatedUser) updatedUser.password = undefined;
+
+    console.log("data:", updatedUser);
     return res.status(200).json({
-      message: `${loggedInUser.firstName} your profile updated successfully`,
-      data: data,
+      message: `${updatedUser.firstName} your profile updated successfully`,
+      data: updatedUser,
     });
   } catch (error) {
-    // console.error("Error updating user profile:", error);
     return res.status(500).json({
       message: error.message,
       error,

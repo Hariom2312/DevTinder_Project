@@ -83,8 +83,7 @@ userSchema.pre("save", function (next) {
   if (!this.photoUrl) {
     const name = this.lastName
       ? `${this.firstName}+${this.lastName}`
-      : this.firstName; // only firstName if lastName missing
-
+      : this.firstName;
     this.photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
   }
   next();

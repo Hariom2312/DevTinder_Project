@@ -19,7 +19,7 @@ const validUpdateProfile = (req)=>{
     "skills",
   ];
   console.log("Req.Body:",req.body);
-  const isEditAllowed = Object.keys(req.body.data).every((field) =>
+  const isEditAllowed = Object.keys(req.body).every((field) =>
      allowedEditFields.includes(field)
   );
 //  console.log(isEditAllowed);
