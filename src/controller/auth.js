@@ -7,7 +7,7 @@ const sendEmail = require("../utils/sendEmail");
 
 exports.signup = async (req, res) => {
   try {
-    const { firstName, lastName, age , gender, email, password } = req.body;
+    const { firstName, lastName, age, gender, email, password } = req.body;
     validSignup(req);
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -24,24 +24,25 @@ exports.signup = async (req, res) => {
     // user Create
     const user = User({
       firstName,
-      lastName:lastName|| undefined,
+      lastName: lastName || undefined,
       email,
       password: hashedPassword,
       age: age || undefined,
-      gender: gender || undefined
+      gender: gender || undefined,
     });
 
     await user.save();
 
-      const token = await user.getJWT();
-      user.password = undefined;
-      
-      res.cookie("loginToken", token, {
-        expires: new Date(Date.now() + 8 * 3600000),
-        httpOnly: true,
-        secure: true,
-      });
+    const token = await user.getJWT();
+    user.password = undefined;
 
+    res.cookie("loginToken", token, {
+      expires: new Date(Date.now() + 8 * 3600000),
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+    });
 
     // console.log(user);
     return res.status(200).json({
@@ -72,7 +73,7 @@ exports.login = async (req, res) => {
       const token = await user.getJWT();
 
       user.password = undefined;
-      
+
       res.cookie("loginToken", token, {
         expires: new Date(Date.now() + 8 * 3600000),
         httpOnly: true,
@@ -89,7 +90,7 @@ exports.login = async (req, res) => {
     }
   } catch (err) {
     res.status(500).json({
-      message:err.message,
+      message: err.message,
       err,
     });
   }
