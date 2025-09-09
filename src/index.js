@@ -4,14 +4,9 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
-const allowedOrigins = [
-  "http://13.60.156.87",
-  "http://localhost:5173"
-];
-
 app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
+  origin: "http://localhost:5173",
+  credentials:true,
 }));
 
 app.use(cookieParser());
@@ -20,19 +15,27 @@ app.use(express.urlencoded({ limit: "10mb", extended: true })); // for form data
 
 
 const authRouter = require("./router/authRouter.js");
-const profileRouter  = require("./router/profileRouter.js");
-const requestRouter  = require("./router/requestRouter.js");
-const userRouter  = require("./router/userRouter.js");
+const profileRouter = require("./router/profileRouter.js");
+const requestRouter = require("./router/requestRouter.js");
+const userRouter = require("./router/userRouter.js");
+const paymentRouter = require("./router/paymentRouter.js");
+const chatRouter = require("./router/chatRouter.js");
+const initiliseSocket = require("./utils/socket.js");
+const dbConnection = require("./config/dbConnection.js");
 
 
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/", userRouter);
+app.use("/", paymentRouter);
+app.use("/", chatRouter);
 
-const dbConnection = require("./config/dbConnection.js");
-dbConnection();
+// Chat using websocket
+const http = require('http');
+const server = http.createServer(app);
+initiliseSocket(server);
 
-app.listen(process.env.PORT, () => {
-  console.log(`Server is running on port ${process.env.PORT}`);
-});
+// in server is listen in db
+dbConnection(server);
+

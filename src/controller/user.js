@@ -119,7 +119,8 @@ exports.deleteAccount = async (req, res) => {
     const request = await ConnectionRequest.findOneAndDelete({
       $or: [{ fromUserId: loggedInUser }, { toUserId: loggedInUser }],
     });
-    console.log(request);
+    
+    // console.log(request);
     res.status(200).json({
       message: "User Delete Account Succesfully !!",
       data: data,

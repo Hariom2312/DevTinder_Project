@@ -141,15 +141,15 @@ exports.forgotPasswordProfile = async (req, res) => {
         .update(req.params.token)
         .digest("hex");
 
-      console.log("Token from URL:", req.params.token);
-      console.log("Hashed token:", resetPasswordToken);
+      // console.log("Token from URL:", req.params.token);
+      // console.log("Hashed token:", resetPasswordToken);
 
       const user = await User.findOne({
         resetPasswordToken,
         resetPasswordExpire: { $gt: Date.now() },
       });
 
-      console.log(user);
+      // console.log(user);
 
       if (!user)
         return res.status(400).json({ message: "Invalid or expired token" });

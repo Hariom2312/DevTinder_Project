@@ -24,7 +24,7 @@ exports.getProfile = async (req, res) => {
 exports.editProfile = async (req, res) => {
   try {
     const loggedInUser = req.user._id;
-    console.log("Body:", req.body);
+    // console.log("Body:", req.body);
 
     if (!validUpdateProfile(req)) {
       return res.status(400).json({ message: "Error in Update Profile..." });
@@ -71,7 +71,7 @@ exports.editProfile = async (req, res) => {
     // ✅ Don’t leak password hash back to client
     if (updatedUser) updatedUser.password = undefined;
 
-    console.log("data:", updatedUser);
+    // console.log("data:", updatedUser);
     return res.status(200).json({
       message: `${updatedUser.firstName} your profile updated successfully`,
       data: updatedUser,

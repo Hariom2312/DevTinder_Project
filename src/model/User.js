@@ -74,6 +74,13 @@ const userSchema = new mongoose.Schema({
      default:"Hey ! I am New User in DevTinder",
     },
 
+    connections: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+
 },
  {timestamps: true}
 );
