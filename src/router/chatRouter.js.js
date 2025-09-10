@@ -1,9 +1,32 @@
-const express = require('express');
+
+const express = require("express");
+const { auth } = require("../middleware/auth");
+const { Chat } = require("../model/Chat");
+
 const chatRouter = express.Router();
 
-const { getHistory , postMessage} = require("../controller/chat");
+chatRouter.get("/chat/:targetUserId", auth, async (req, res) => {
+  const { targetUserId } = req.params;
+  const userId = req.user._id;
 
-chatRouter.get("/chat/history/:userId/:targetUserId",getHistory);
-chatRouter.post("/chat/message",postMessage);
+  try {
+    let chat = await Chat.findOne({
+      participants: { $all: [userId, targetUserId] },
+    }).populate({
+      path: "messages.senderId",
+      select: "firstName lastName",
+    });
+    if (!chat) {
+      chat = new Chat({
+        participants: [userId, targetUserId],
+        messages: [],
+      });
+      await chat.save();
+    }
+    res.json(chat);
+  } catch (err) {
+    console.error(err);
+  }
+});
 
 module.exports = chatRouter;
